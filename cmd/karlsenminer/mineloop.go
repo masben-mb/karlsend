@@ -9,6 +9,7 @@ import (
 	"github.com/karlsen-network/karlsend/version"
 
 	"github.com/karlsen-network/karlsend/app/appmessage"
+	"github.com/karlsen-network/karlsend/cmd/karlsenminer/custoption"
 	"github.com/karlsen-network/karlsend/cmd/karlsenminer/templatemanager"
 	"github.com/karlsen-network/karlsend/domain/consensus/model/externalapi"
 	"github.com/karlsen-network/karlsend/domain/consensus/utils/consensushashing"
@@ -24,7 +25,7 @@ var dagReady = false
 const logHashRateInterval = 10 * time.Second
 
 func mineLoop(client *minerClient, numberOfBlocks uint64, targetBlocksPerSecond float64, mineWhenNotSynced bool,
-	miningAddr util.Address) error {
+	miningAddr util.Address, customOpt *custoption.Option) error {
 	rand.Seed(time.Now().UnixNano()) // Seed the global concurrent-safe random source.
 
 	errChan := make(chan error)
@@ -37,7 +38,7 @@ func mineLoop(client *minerClient, numberOfBlocks uint64, targetBlocksPerSecond 
 	foundBlockChan := make(chan *externalapi.DomainBlock, router.DefaultMaxMessages/2)
 
 	spawn("templatesLoop", func() {
-		templatesLoop(client, miningAddr, errChan)
+		templatesLoop(client, miningAddr, errChan, customOpt)
 	})
 
 	spawn("blocksLoop", func() {
@@ -197,7 +198,7 @@ func getBlockForMining(mineWhenNotSynced bool) (*externalapi.DomainBlock, *pow.S
 	}
 }
 
-func templatesLoop(client *minerClient, miningAddr util.Address, errChan chan error) {
+func templatesLoop(client *minerClient, miningAddr util.Address, errChan chan error, customOpt *custoption.Option) {
 	getBlockTemplate := func() {
 		template, err := client.GetBlockTemplate(miningAddr.String(), "karlsenminer-"+version.Version())
 		if nativeerrors.Is(err, router.ErrTimeout) {
@@ -217,7 +218,7 @@ func templatesLoop(client *minerClient, miningAddr util.Address, errChan chan er
 			errChan <- errors.Wrapf(err, "Error getting block template from %s", client.Address())
 			return
 		}
-		err = templatemanager.Set(template, backendLog)
+		err = templatemanager.Set(template, backendLog, customOpt)
 		// after first template DAG is supposed to be ready
 		// TODO: refresh dag status in real time
 		dagReady = true

@@ -2,6 +2,7 @@ package pow
 
 import (
 	"github.com/edsrzf/mmap-go"
+	"github.com/karlsen-network/karlsend/cmd/karlsenminer/custoption"
 	"golang.org/x/crypto/sha3"
 
 	//"crypto/sha3"
@@ -121,36 +122,40 @@ func buildDatasetSegment(ctx *fishhashContext, start, end uint32) {
 	}
 }
 
-func prebuildDataset(ctx *fishhashContext, numThreads uint32) {
+func prebuildDataset(ctx *fishhashContext, numThreads uint32, customOpt *custoption.Option) {
 	log.Infof("Building prebuilt Dataset - we must be on miner")
 
 	if ctx.FullDataset == nil {
 		return
 	}
 
-	if ctx.ready == true {
+	if ctx.ready {
 		log.Infof("Dataset already generated")
 		return
 	}
 
-	// TODO: dag file name (hardcoded for debug)
-	// must parameterized this
 	filename := "hashes.dat"
+	if customOpt != nil && customOpt.Path != "" {
+		if customOpt.Path == "/" {
+			filename = customOpt.Path + filename
+		} else {
+			filename = customOpt.Path + "/" + filename
+		}
+		log.Infof("Verifying if DAG local storage file already exists ...")
+		hashes, err := loadmappedHashesFromFile(filename)
+		if err == nil {
+			log.Infof("DAG loaded succesfully from local storage ")
+			ctx.FullDataset = hashes
 
-	log.Infof("Verifying if DAG local storage file already exists ...")
-	hashes, err := loadmappedHashesFromFile(filename)
-	if err == nil {
-		log.Infof("DAG loaded succesfully from local storage ")
-		ctx.FullDataset = hashes
-
-		log.Debugf("debug DAG hash[10] : %x", ctx.FullDataset[10])
-		log.Debugf("debug DAG hash[42] : %x", ctx.FullDataset[42])
-		log.Debugf("debug DAG hash[12345] : %x", ctx.FullDataset[12345])
-		ctx.ready = true
-		return
+			log.Debugf("debug DAG hash[10] : %x", ctx.FullDataset[10])
+			log.Debugf("debug DAG hash[42] : %x", ctx.FullDataset[42])
+			log.Debugf("debug DAG hash[12345] : %x", ctx.FullDataset[12345])
+			ctx.ready = true
+			return
+		}
+		log.Infof("DAG local storage file not found")
 	}
 
-	log.Infof("DAG local storage file not found")
 	log.Infof("GENERATING DATASET, This operation may take a while, please wait ...")
 
 	if numThreads > 1 {
@@ -181,11 +186,12 @@ func prebuildDataset(ctx *fishhashContext, numThreads uint32) {
 	log.Debugf("debug DAG hash[42] : %x", ctx.FullDataset[42])
 	log.Debugf("debug DAG hash[12345] : %x", ctx.FullDataset[12345])
 
-	log.Infof("Saving DAG to local storage file ...")
-	err = mapHashesToFile(ctx.FullDataset, filename)
-
-	if err != nil {
-		panic(err)
+	if customOpt != nil && customOpt.Path != "" {
+		log.Infof("Saving DAG to local storage file ...")
+		err := mapHashesToFile(ctx.FullDataset, filename)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	log.Infof("DATASET geneated succesfully")

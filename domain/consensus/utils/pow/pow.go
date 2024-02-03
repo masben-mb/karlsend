@@ -1,6 +1,7 @@
 package pow
 
 import (
+	"github.com/karlsen-network/karlsend/cmd/karlsenminer/custoption"
 	"github.com/karlsen-network/karlsend/domain/consensus/model/externalapi"
 	"github.com/karlsen-network/karlsend/domain/consensus/utils/consensushashing"
 	"github.com/karlsen-network/karlsend/domain/consensus/utils/hashes"
@@ -29,7 +30,7 @@ type State struct {
 // var context *fishhashContext
 var sharedContext *fishhashContext
 
-func getContext(full bool, log *logger.Logger) *fishhashContext {
+func getContext(full bool, log *logger.Logger, customOpt *custoption.Option) *fishhashContext {
 	sharedContextLock.Lock()
 	defer sharedContextLock.Unlock()
 
@@ -63,7 +64,7 @@ func getContext(full bool, log *logger.Logger) *fishhashContext {
 
 	if full {
 		//TODO : we forced the threads to 8 - must be calculated and parameterized
-		prebuildDataset(sharedContext, 8)
+		prebuildDataset(sharedContext, 7, customOpt)
 	} else {
 		log.Infof("Dataset building SKIPPED - we must be on node")
 	}
@@ -81,7 +82,7 @@ func SetLogger(backend *logger.Backend, level logger.Level) {
 
 // NewState creates a new state with pre-computed values to speed up mining
 // It takes the target from the Bits field
-func NewState(header externalapi.MutableBlockHeader, generatedag bool) *State {
+func NewState(header externalapi.MutableBlockHeader, generatedag bool, customOpt *custoption.Option) *State {
 	target := difficulty.CompactToBig(header.Bits())
 	// Zero out the time and nonce.
 	timestamp, nonce := header.TimeInMilliseconds(), header.Nonce()
@@ -98,7 +99,7 @@ func NewState(header externalapi.MutableBlockHeader, generatedag bool) *State {
 		//mat:       *generateMatrix(prePowHash),
 		Timestamp: timestamp,
 		Nonce:     nonce,
-		context:   *getContext(generatedag, log),
+		context:   *getContext(generatedag, log, customOpt),
 	}
 }
 
@@ -167,7 +168,7 @@ func (state *State) CheckProofOfWork() bool {
 // CheckProofOfWorkByBits check's if the block has a valid PoW according to its Bits field
 // it does not check if the difficulty itself is valid or less than the maximum for the appropriate network
 func CheckProofOfWorkByBits(header externalapi.MutableBlockHeader) bool {
-	return NewState(header, false).CheckProofOfWork()
+	return NewState(header, false, nil).CheckProofOfWork()
 }
 
 // ToBig converts a externalapi.DomainHash into a big.Int treated as a little endian string.
@@ -190,7 +191,7 @@ func BlockLevel(header externalapi.BlockHeader, maxBlockLevel int) int {
 		return maxBlockLevel
 	}
 
-	proofOfWorkValue := NewState(header.ToMutable(), false).CalculateProofOfWorkValue()
+	proofOfWorkValue := NewState(header.ToMutable(), false, nil).CalculateProofOfWorkValue()
 	level := maxBlockLevel - proofOfWorkValue.BitLen()
 	// If the block has a level lower than genesis make it zero.
 	if level < 0 {

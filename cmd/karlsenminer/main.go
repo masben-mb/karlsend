@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/karlsen-network/karlsend/cmd/karlsenminer/custoption"
 	"github.com/karlsen-network/karlsend/util"
 
 	"github.com/karlsen-network/karlsend/version"
@@ -53,9 +54,21 @@ func main() {
 		printErrorAndExit(errors.Errorf("Error decoding mining address: %s", err))
 	}
 
+	customOpt := &custoption.Option{
+		NumThreads: 7,
+		Path:       cfg.HashesPath,
+	}
+
+	if customOpt.Path != "" {
+		ok := custoption.CheckPath(customOpt.Path)
+		if ok != nil {
+			printErrorAndExit(errors.Errorf("Error wrong hashespath: %s", ok))
+		}
+	}
+
 	doneChan := make(chan struct{})
 	spawn("mineLoop", func() {
-		err = mineLoop(client, cfg.NumberOfBlocks, *cfg.TargetBlocksPerSecond, cfg.MineWhenNotSynced, miningAddr)
+		err = mineLoop(client, cfg.NumberOfBlocks, *cfg.TargetBlocksPerSecond, cfg.MineWhenNotSynced, miningAddr, customOpt)
 		if err != nil {
 			panic(errors.Wrap(err, "error in mine loop"))
 		}

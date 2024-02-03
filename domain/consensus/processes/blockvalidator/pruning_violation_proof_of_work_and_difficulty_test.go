@@ -115,7 +115,7 @@ func TestPOW(t *testing.T) {
 // solveBlockWithWrongPOW increments the given block's nonce until it gets wrong POW (for test!).
 func solveBlockWithWrongPOW(block *externalapi.DomainBlock) *externalapi.DomainBlock {
 	header := block.Header.ToMutable()
-	state := pow.NewState(header, false)
+	state := pow.NewState(header, false, nil)
 	for i := uint64(0); i < math.MaxUint64; i++ {
 		state.Nonce = i
 		if !state.CheckProofOfWork() {

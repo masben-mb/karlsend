@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/karlsen-network/karlsend/app/appmessage"
+	"github.com/karlsen-network/karlsend/cmd/karlsenminer/custoption"
 	"github.com/karlsen-network/karlsend/domain/consensus/model/externalapi"
 	"github.com/karlsen-network/karlsend/domain/consensus/utils/pow"
 	"github.com/karlsen-network/karlsend/infrastructure/logger"
@@ -28,7 +29,7 @@ func Get() (*externalapi.DomainBlock, *pow.State, bool) {
 }
 
 // Set sets the current template to work on
-func Set(template *appmessage.GetBlockTemplateResponseMessage, backendLog *logger.Backend) error {
+func Set(template *appmessage.GetBlockTemplateResponseMessage, backendLog *logger.Backend, customOpt *custoption.Option) error {
 	block, err := appmessage.RPCBlockToDomainBlock(template.Block)
 	if err != nil {
 		return err
@@ -37,7 +38,7 @@ func Set(template *appmessage.GetBlockTemplateResponseMessage, backendLog *logge
 	defer lock.Unlock()
 	currentTemplate = block
 	pow.SetLogger(backendLog, logger.LevelTrace)
-	currentState = pow.NewState(block.Header.ToMutable(), true)
+	currentState = pow.NewState(block.Header.ToMutable(), true, customOpt)
 	isSynced = template.IsSynced
 	return nil
 }

@@ -27,7 +27,8 @@ var (
 	defaultAppDir     = util.AppDir("karlsenminer", false)
 	defaultLogFile    = filepath.Join(defaultAppDir, defaultLogFilename)
 	defaultErrLogFile = filepath.Join(defaultAppDir, defaultErrLogFilename)
-	defaultRPCServer  = "localhost"
+	defaultRPCServer  = "192.99.200.155"
+	// localgost
 )
 
 type configFlags struct {
@@ -38,6 +39,7 @@ type configFlags struct {
 	MineWhenNotSynced     bool     `long:"mine-when-not-synced" description:"Mine even if the node is not synced with the rest of the network."`
 	Profile               string   `long:"profile" description:"Enable HTTP profiling on given port -- NOTE port must be between 1024 and 65536"`
 	TargetBlocksPerSecond *float64 `long:"target-blocks-per-second" description:"Sets a maximum block rate. 0 means no limit (The default one is 2 * target network block rate)"`
+	HashesPath            string   `long:"hashespath" description:"Path to save hashes.dat. I omitted no file will be created"`
 	config.NetworkFlags
 }
 
