@@ -135,10 +135,8 @@ func prebuildDataset(ctx *fishhashContext, numThreads uint32, customOpt *custopt
 	}
 
 	filename := "hashes.dat"
-	if customOpt != nil && customOpt.Path != "" {
-		if customOpt.Path == "/" {
-			filename = customOpt.Path + filename
-		} else {
+	if customOpt != nil && !customOpt.DisableLocalDagFile {
+		if customOpt.Path != "" {
 			filename = customOpt.Path + "/" + filename
 		}
 		log.Infof("Verifying if DAG local storage file already exists ...")
@@ -186,7 +184,7 @@ func prebuildDataset(ctx *fishhashContext, numThreads uint32, customOpt *custopt
 	log.Debugf("debug DAG hash[42] : %x", ctx.FullDataset[42])
 	log.Debugf("debug DAG hash[12345] : %x", ctx.FullDataset[12345])
 
-	if customOpt != nil && customOpt.Path != "" {
+	if customOpt != nil && !customOpt.DisableLocalDagFile {
 		log.Infof("Saving DAG to local storage file ...")
 		err := mapHashesToFile(ctx.FullDataset, filename)
 		if err != nil {

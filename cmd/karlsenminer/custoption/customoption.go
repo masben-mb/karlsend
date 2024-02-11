@@ -7,8 +7,9 @@ import (
 )
 
 type Option struct {
-	NumThreads uint32
-	Path       string
+	NumThreads          uint32
+	Path                string
+	DisableLocalDagFile bool
 }
 
 func CheckPath(name string) error {

@@ -39,7 +39,8 @@ type configFlags struct {
 	MineWhenNotSynced     bool     `long:"mine-when-not-synced" description:"Mine even if the node is not synced with the rest of the network."`
 	Profile               string   `long:"profile" description:"Enable HTTP profiling on given port -- NOTE port must be between 1024 and 65536"`
 	TargetBlocksPerSecond *float64 `long:"target-blocks-per-second" description:"Sets a maximum block rate. 0 means no limit (The default one is 2 * target network block rate)"`
-	HashesPath            string   `long:"hashespath" description:"Path to save hashes.dat. I omitted no file will be created"`
+	HashesPath            string   `long:"hashespath" description:"Custom path to save hashes.dat."`
+	DisableLocalDagFile   bool     `long:"disable-local-dag-file" description:"Disable saving local dag file."`
 	config.NetworkFlags
 }
 

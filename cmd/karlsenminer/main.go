@@ -55,8 +55,9 @@ func main() {
 	}
 
 	customOpt := &custoption.Option{
-		NumThreads: 7,
-		Path:       cfg.HashesPath,
+		NumThreads:          7,
+		Path:                cfg.HashesPath,
+		DisableLocalDagFile: cfg.DisableLocalDagFile,
 	}
 
 	if customOpt.Path != "" {
