@@ -81,7 +81,8 @@ func parseConfig() (*configFlags, error) {
 	}
 
 	if cfg.MiningAddr == "" {
-		return nil, errors.New("--miningaddr is required")
+		fmt.Fprintln(os.Stderr, errors.New("Error parsing command-line arguments: --miningaddr is required"))
+		os.Exit(42)
 	}
 
 	initLog(defaultLogFile, defaultErrLogFile)
